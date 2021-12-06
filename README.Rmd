@@ -1,0 +1,76 @@
+---
+title: "Nepalis Worldwide"
+subtitle: "Problem Set 07"
+author: "Charavee Basnet Chettri"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Code in R
+
+```{r, message=FALSE}
+#loadpackages
+library (tidyverse)
+library(sf)
+library(maps)
+library(readr)
+library(scales)
+library(rworldmap)
+library(tmaptools)
+```
+
+```{r, message=FALSE}
+worldmap <-  maps::map("world", plot = FALSE, fill = TRUE)
+
+worldmap_sf <- worldmap %>% 
+  st_as_sf(coords = c("x", "y"), crs=4326)
+
+worldmap_sf_filter <- worldmap_sf %>% 
+  filter(ID== "Nepal" )
+```
+
+```{r, message=FALSE}
+npl_diaspora <- "npl_diaspora.csv" %>% 
+  read_csv()
+
+npl_join <- worldmap_sf %>% 
+  left_join (npl_diaspora, by = c( "ID" = "country"))
+
+npl_sum <- npl_diaspora %>% 
+  group_by (continent) %>% 
+  summarize (total= sum (number))
+```
+
+*** 
+
+### Visuals
+
+```{r, echo=FALSE}
+ggplot ()+
+  geom_sf (data= worldmap_sf)+
+  geom_sf (data= worldmap_sf_filter, mapping = aes (fill= ID))+
+  labs (title= "Where is Home for Charavee?", fill= "Index")+
+  scale_fill_manual (values= c("green"))
+```
+
+```{r , echo=FALSE}
+ggplot (data= npl_sum, mapping = aes (x= continent, y=total))+
+  geom_col(fill= "#2ca25f")+
+  labs (title= "Nepali Diaspora in the World", 
+        subtitle = "From The Official Portal of Government of Nepal", 
+        x = "Region/ Continent", 
+        y= "Number of Nepalis")+
+  coord_cartesian(ylim = c(0, 1500000))+
+  scale_y_continuous (labels= number_format(), 
+                      breaks= seq (0, 1500000, 200000))
+```
+
+*****
+
+Sources:
+
+1. The Official Portal of The Government of Nepal : [link here](http://nepal.gov.np:8080/NationalPortal/view-page?id=132)
+
